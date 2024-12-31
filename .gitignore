@@ -143,3 +143,4 @@ credential.py
 mp3_file.mp3
 mp3_file.m4a
 output*.mp3
+*.pdf

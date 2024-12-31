@@ -1,6 +1,32 @@
+from flask import Flask, request, jsonify
+
 from services.open_ai_service import OpenAIService
 from services.audio import Audio
 
+from src.document_processor import load_and_process_documents
+from src.rag_chain import create_vectorstore, get_retriever, load_vectorstore
+
+app = Flask(__name__)
+open_ai_service = OpenAIService(gpt_model="gpt-4o")
+
+# Подготовка документов для RAG
+pdf_path = "./src/data_for_rag.pdf"
+processed_docs = load_and_process_documents(pdf_path)
+vectorstore = create_vectorstore(processed_docs)
+# vectorstore = load_vectorstore(processed_docs)
+retriever = get_retriever(vectorstore)
+
+@app.route('/ask', methods=['POST'])
+def ask_question():
+    data = request.json
+    question = data.get("question", "")
+
+    if not question:
+        return jsonify({"error": "Вопрос не задан"}), 400
+
+    # Получение ответа через RAG
+    response = open_ai_service.rag_assistant(question_text=question, retriever=retriever)
+    return jsonify({"response": response})
 
 def audio_assistant():
     _audio = Audio()

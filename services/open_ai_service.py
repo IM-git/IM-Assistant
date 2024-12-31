@@ -1,5 +1,6 @@
 import os
 from openai import OpenAI
+from langchain_openai import ChatOpenAI
 
 OPENAI_API_KEY = ''
 
@@ -10,6 +11,28 @@ class OpenAIService:
 
         self.gpt_model = gpt_model
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", OPENAI_API_KEY))
+        self.chat_client = ChatOpenAI(model=gpt_model)
+
+    def rag_assistant(self, question_text: str, retriever):
+        """ Метод для работы с RAG-моделью:
+            - Извлекает релевантные документы.
+            - Формирует контекст.
+            - Генерирует ответ с учётом контекста. """
+
+        # Извлечение релевантных документов
+        relevant_docs = retriever.retrieve(question_text)
+
+        # Формирование контекста
+        context = "\n\n".join(doc.page_content for doc in relevant_docs)
+
+        # Генерация ответа с учётом контекста
+        response = self.chat_client.chat(
+            [
+                {"role": "system", "content": f"Контекст: {context}"},
+                {"role": "user", "content": question_text}
+            ]
+        )
+        return response.choices[0].message.content
 
     # Функция для обработки запроса от пользователя
     def user_type_assistant(self, question_text: str):
