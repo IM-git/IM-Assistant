@@ -60,12 +60,15 @@ def audio_assistant():
 def message_assistant():
     _openai = OpenAIService()
 
-    while True:
+    x = True
+
+    while x:
 
         _developer_assistant_context = ("You are a helpful assistant that answers programming questions "
                                         "in the style of a southern belle from the southeast United States.")
 
-        question = input("Привет! Вы можете задать вопрос отправив текстовое сообщение ниже:")
+        # question = input("Привет! Вы можете задать вопрос отправив текстовое сообщение ниже:")
+        question = "Сколько длится процесс переходного периода?"
 
         if question.lower() in ["выход", "стоп", "закончить"]:
             print("Завершение работы.")
@@ -74,12 +77,16 @@ def message_assistant():
         print(f"Ваш вопрос: {question}")
 
         try:
-            response_text = _openai.developer_type_assistant(question_text=question,
-                                                             content=_developer_assistant_context)
-            print(f"Ответ: {response_text}")
+            # response_text = _openai.developer_type_assistant(question_text=question,
+            #                                                  content=_developer_assistant_context)
+            response = open_ai_service.rag_assistant(question_text=question, retriever=retriever)
+            # print(f"Ответ: {response_text}")
+            print(f"Ответ: {response}")
 
         except Exception as e:
             print(f"Ошибка при обработке запроса: {e}")
+
+        x = False
 
 
 

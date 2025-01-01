@@ -139,6 +139,7 @@ temporary.py
 allureress/
 images/
 audio/
+vectorstore/
 credential.py
 mp3_file.mp3
 mp3_file.m4a

@@ -1,8 +1,32 @@
 import os
+
 from openai import OpenAI
+
 from langchain_openai import ChatOpenAI
 
+from langchain.chains import RetrievalQA
+
+from langchain.prompts import PromptTemplate
+
+from langchain_core.runnables import RunnablePassthrough
+from langchain_core.output_parsers import StrOutputParser
+
+
 OPENAI_API_KEY = ''
+
+RAG_PROMPT_TEMPLATE = """
+            You are a helpful coding assistant that can answer questions about the provided context. The context is usually a PDF document or an image (screenshot) of a code file. Augment your answers with code snippets from the context if necessary.
+            
+            If you don't know the answer, say you don't know.
+            
+            Context: {context}
+            Question: {question}"""
+
+PROMPT = PromptTemplate.from_template(RAG_PROMPT_TEMPLATE)
+
+
+def format_docs(docs):
+    return "\n\n".join(doc.page_content for doc in docs)
 
 
 class OpenAIService:
@@ -20,19 +44,38 @@ class OpenAIService:
             - Генерирует ответ с учётом контекста. """
 
         # Извлечение релевантных документов
-        relevant_docs = retriever.retrieve(question_text)
+        # relevant_docs = retriever.retrieve(question_text)
+        # relevant_docs = retriever.invoke(question_text)
 
         # Формирование контекста
-        context = "\n\n".join(doc.page_content for doc in relevant_docs)
+        # context = "\n\n".join(doc.page_content for doc in relevant_docs)
 
         # Генерация ответа с учётом контекста
-        response = self.chat_client.chat(
-            [
-                {"role": "system", "content": f"Контекст: {context}"},
-                {"role": "user", "content": question_text}
-            ]
+        # response = self.chat_client.chat(
+        #     [
+        #         {"role": "system", "content": f"Контекст: {context}"},
+        #         {"role": "user", "content": question_text}
+        #     ]
+        # )
+
+
+        # rag_chain = (
+        #         {"context": retriever | format_docs, "question": RunnablePassthrough()}
+        #         | PROMPT
+        #         | self.chat_client
+        #         | StrOutputParser()
+        # )
+
+        rag_chain = RetrievalQA.from_chain_type(
+            llm=self.chat_client,
+            chain_type="stuff",
+            retriever=retriever,
+            return_source_documents=True
         )
-        return response.choices[0].message.content
+
+        return rag_chain
+
+        # return response.choices[0].message.content
 
     # Функция для обработки запроса от пользователя
     def user_type_assistant(self, question_text: str):
