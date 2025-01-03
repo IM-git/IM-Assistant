@@ -4,8 +4,53 @@ from openai import OpenAI
 
 from langchain_openai import ChatOpenAI
 
-from langchain.chains import RetrievalQA
 
+# В чем разница в использовании между hub и PromptTemplate для значения PROMPT?
+''' 
+Ответ:
+    PromptTemplate:
+    
+        Что это такое?
+            Это статически задаваемый шаблон, который создаётся прямо в коде. Вы можете жёстко задать структуру запроса.
+        
+        Когда использовать?
+            Если структура вашего запроса не изменяется и не требует динамической загрузки.
+        
+        Пример:
+            from langchain.prompts import PromptTemplate
+            
+            RAG_PROMPT_TEMPLATE = """
+            Context: {context}
+            Question: {question}
+            """
+            PROMPT = PromptTemplate.from_template(RAG_PROMPT_TEMPLATE)
+            
+            # Использование
+            prompt_text = PROMPT.format(context="Python — это язык программирования.", question="Что такое Python?")
+            print(prompt_text)
+            
+    hub.pull:
+    
+        Что это такое?
+            Это динамически загружаемый шаблон из LangChain Hub — централизованного хранилища для шаблонов,
+            цепочек и других компонентов. Вы можете использовать готовые шаблоны, предоставляемые LangChain,
+            или загружать пользовательские шаблоны, созданные вами.
+            
+        Когда использовать?
+            Если вы хотите динамически загружать шаблоны, поддерживать их версионность
+            или использовать шаблоны, предоставляемые сообществом.
+            
+        Пример:
+            from langchain import hub
+            
+            # Загрузка шаблона с LangChain Hub
+            PROMPT = hub.pull("rlm/rag-prompt")
+            
+            # Использование
+            prompt_text = PROMPT.format(context="Python — это язык программирования.", question="Что такое Python?")
+            print(prompt_text)
+'''
+from langchain import hub
 from langchain.prompts import PromptTemplate
 
 from langchain_core.runnables import RunnablePassthrough
@@ -15,7 +60,9 @@ from langchain_core.output_parsers import StrOutputParser
 OPENAI_API_KEY = ''
 
 RAG_PROMPT_TEMPLATE = """
-            You are a helpful coding assistant that can answer questions about the provided context. The context is usually a PDF document or an image (screenshot) of a code file. Augment your answers with code snippets from the context if necessary.
+            You are a helpful coding assistant that can answer questions about the provided context.
+            The context is usually a PDF document or an image (screenshot) of a code file.
+            Augment your answers with code snippets from the context if necessary.
             
             If you don't know the answer, say you don't know.
             
@@ -23,10 +70,7 @@ RAG_PROMPT_TEMPLATE = """
             Question: {question}"""
 
 PROMPT = PromptTemplate.from_template(RAG_PROMPT_TEMPLATE)
-
-
-def format_docs(docs):
-    return "\n\n".join(doc.page_content for doc in docs)
+# PROMPT = hub.pull("rlm/rag-prompt")
 
 
 class OpenAIService:
@@ -35,7 +79,11 @@ class OpenAIService:
 
         self.gpt_model = gpt_model
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", OPENAI_API_KEY))
-        self.chat_client = ChatOpenAI(model=gpt_model)
+        self.chat_client = ChatOpenAI(model=gpt_model, temperature=0)
+
+    @staticmethod
+    def format_docs(docs):
+        return "\n\n".join(doc.page_content for doc in docs)
 
     def rag_assistant(self, question_text: str, retriever):
         """ Метод для работы с RAG-моделью:
@@ -43,39 +91,15 @@ class OpenAIService:
             - Формирует контекст.
             - Генерирует ответ с учётом контекста. """
 
-        # Извлечение релевантных документов
-        # relevant_docs = retriever.retrieve(question_text)
-        # relevant_docs = retriever.invoke(question_text)
-
-        # Формирование контекста
-        # context = "\n\n".join(doc.page_content for doc in relevant_docs)
-
-        # Генерация ответа с учётом контекста
-        # response = self.chat_client.chat(
-        #     [
-        #         {"role": "system", "content": f"Контекст: {context}"},
-        #         {"role": "user", "content": question_text}
-        #     ]
-        # )
-
-
-        # rag_chain = (
-        #         {"context": retriever | format_docs, "question": RunnablePassthrough()}
-        #         | PROMPT
-        #         | self.chat_client
-        #         | StrOutputParser()
-        # )
-
-        rag_chain = RetrievalQA.from_chain_type(
-            llm=self.chat_client,
-            chain_type="stuff",
-            retriever=retriever,
-            return_source_documents=True
+        rag_chain = (
+                {"context": retriever | self.format_docs, "question": RunnablePassthrough()}
+                | PROMPT
+                | self.chat_client
+                | StrOutputParser()
         )
 
-        return rag_chain
+        return rag_chain.invoke(question_text)
 
-        # return response.choices[0].message.content
 
     # Функция для обработки запроса от пользователя
     def user_type_assistant(self, question_text: str):
