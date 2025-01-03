@@ -1,7 +1,5 @@
 from flask import Flask, request, jsonify
 
-import tiktoken
-
 from services.open_ai_service import OpenAIService
 from services.audio import Audio
 
@@ -12,9 +10,9 @@ app = Flask(__name__)
 open_ai_service = OpenAIService(gpt_model="gpt-4o-mini")
 
 # Подготовка документов для RAG
-pdf_path = "./src/data_for_rag.pdf"
-processed_docs = load_and_process_documents(pdf_path)
-# vectorstore = create_vectorstore(processed_docs)
+# pdf_path = "./src/data_for_rag.pdf"
+# processed_docs = load_and_process_documents(pdf_path)
+# vectorstore = create_vectorstore(documents=processed_docs)
 vectorstore = load_vectorstore()
 retriever = get_retriever(vectorstore)
 
@@ -32,15 +30,13 @@ def ask_question():
     return jsonify({"response": response})
 
 def audio_assistant():
+
     _audio = Audio()
-    _openai = OpenAIService()
 
     print("Привет! Вы можете задать вопрос голосом.")
-    _developer_assistant_context = ("You are a helpful assistant that answers programming questions "
-                                    "in the style of a southern belle from the southeast United States.")
 
     while True:
-        # Голосовой ввод
+
         question = _audio.speech_to_text()
 
         if question.lower() in ["выход", "стоп", "закончить"]:
@@ -49,26 +45,25 @@ def audio_assistant():
 
         print(f"Ваш вопрос: {question}")
 
-        # Выбор подходящего метода для ответа
         try:
-            response_text = _openai.developer_type_assistant(question_text=question,
-                                                             content=_developer_assistant_context)
-            print(f"Ответ: {response_text}")
-
-            # Преобразование ответа в голос
-            _audio.text_to_speech(response_text)
+            response = open_ai_service.rag_assistant(question_text=question, retriever=retriever)
+            print(f"Ответ: {response}")
+            _audio.text_to_speech(response)
 
         except Exception as e:
             print(f"Ошибка при обработке запроса: {e}")
 
 def message_assistant():
 
-    while True:
+    x = True
+
+    while x:
 
         _developer_assistant_context = ("You are a helpful assistant that answers programming questions "
                                         "in the style of a southern belle from the southeast United States.")
 
-        question = input("Привет! Вы можете задать вопрос отправив текстовое сообщение ниже:")
+        # question = input("Привет! Вы можете задать вопрос отправив текстовое сообщение ниже:")
+        question = "При завершении задачи какие статусы выставляются?"
 
         if question.lower() in ["выход", "стоп", "закончить"]:
             print("Завершение работы.")
@@ -83,15 +78,7 @@ def message_assistant():
         except Exception as e:
             print(f"Ошибка при обработке запроса: {e}")
 
-
-def num_tokens_from_string(string: str, encoding_name: str) -> int:
-    """ Returns the number of tokens in a text string.
-        https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb"""
-
-    encoding = tiktoken.get_encoding(encoding_name)
-    num_tokens = len(encoding.encode(string))
-    return num_tokens
-
+        x = False
 
 
 if __name__ == '__main__':

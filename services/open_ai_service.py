@@ -105,35 +105,3 @@ if __name__ == '__main__':
 
     # Инициализация экземпляра класса OpenAIService
     open_ai_service = OpenAIService()
-
-    # Проверка метода user_type_assistant
-    try:
-        user_response = open_ai_service.user_type_assistant("Привет, как тебя зовут?")
-        print("user_type_assistant работает корректно.")
-        print(f"Ответ: {user_response}")
-    except Exception as e:
-        print(f"Ошибка в user_type_assistant: {e}")
-
-    # Проверка метода developer_type_assistant
-    try:
-        developer_context = "Вы опытный разработчик Python."
-        developer_response = open_ai_service.developer_type_assistant(
-            question_text="Как создать виртуальное окружение в Python?",
-            content=developer_context
-        )
-        print("developer_type_assistant работает корректно.")
-        print(f"Ответ: {developer_response}")
-    except Exception as e:
-        print(f"Ошибка в developer_type_assistant: {e}")
-
-    # Проверка метода assistant_type_assistant
-    try:
-        assistant_response = open_ai_service.assistant_type_assistant(
-            question_text="Расскажи шутку.",
-            context="",
-            content=""
-        )
-        print("assistant_type_assistant работает корректно.")
-        print(f"Ответ: {assistant_response}")
-    except Exception as e:
-        print(f"Ошибка в assistant_type_assistant: {e}")
