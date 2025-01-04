@@ -1,13 +1,8 @@
-from flask import Flask, request, jsonify
-
-from services.open_ai_service import OpenAIService
+from services.lang_chain import LangChainService
 from services.audio import Audio
 
 from src.document_processor import load_and_process_documents
 from src.rag_chain import create_vectorstore, get_retriever, load_vectorstore
-
-app = Flask(__name__)
-open_ai_service = OpenAIService(gpt_model="gpt-4o-mini")
 
 # Подготовка документов для RAG
 # pdf_path = "./src/data_for_rag.pdf"
@@ -16,18 +11,8 @@ open_ai_service = OpenAIService(gpt_model="gpt-4o-mini")
 vectorstore = load_vectorstore()
 retriever = get_retriever(vectorstore)
 
+lang_chain_service = LangChainService(gpt_model="gpt-4o-mini")
 
-@app.route('/ask', methods=['POST'])
-def ask_question():
-    data = request.json
-    question = data.get("question", "")
-
-    if not question:
-        return jsonify({"error": "Вопрос не задан"}), 400
-
-    # Получение ответа через RAG
-    response = open_ai_service.rag_assistant(question_text=question, retriever=retriever)
-    return jsonify({"response": response})
 
 def audio_assistant():
 
@@ -46,7 +31,7 @@ def audio_assistant():
         print(f"Ваш вопрос: {question}")
 
         try:
-            response = open_ai_service.rag_assistant(question_text=question, retriever=retriever)
+            response = lang_chain_service.rag_assistant(question_text=question, retriever=retriever)
             print(f"Ответ: {response}")
             _audio.text_to_speech(response)
 
@@ -59,9 +44,6 @@ def message_assistant():
 
     while x:
 
-        _developer_assistant_context = ("You are a helpful assistant that answers programming questions "
-                                        "in the style of a southern belle from the southeast United States.")
-
         # question = input("Привет! Вы можете задать вопрос отправив текстовое сообщение ниже:")
         question = "При завершении задачи какие статусы выставляются?"
 
@@ -72,7 +54,7 @@ def message_assistant():
         print(f"Ваш вопрос: {question}")
 
         try:
-            response = open_ai_service.rag_assistant(question_text=question, retriever=retriever)
+            response = lang_chain_service.rag_assistant(question_text=question, retriever=retriever)
             print(f"Ответ: {response}")
 
         except Exception as e:
