@@ -1,14 +1,13 @@
 from services.lang_chain import LangChainService
 from services.audio import Audio
 
-from src.document_processor import load_and_process_documents
-from src.rag_chain import create_vectorstore, get_retriever, load_vectorstore
+from src.chroma_vector_builder import load_and_process_documents, create_vectorstore, get_retriever, load_vectorstore
 
 # Подготовка документов для RAG
-# pdf_path = "./src/data_for_rag.pdf"
-# processed_docs = load_and_process_documents(pdf_path)
-# vectorstore = create_vectorstore(documents=processed_docs)
-vectorstore = load_vectorstore()
+pdf_path = "./src/data_for_rag.pdf"
+processed_docs = load_and_process_documents(pdf_path)
+vectorstore = create_vectorstore(documents=processed_docs)
+# vectorstore = load_vectorstore()
 retriever = get_retriever(vectorstore)
 
 lang_chain_service = LangChainService(gpt_model="gpt-4o-mini")

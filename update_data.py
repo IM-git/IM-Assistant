@@ -1,12 +1,12 @@
 import os
 
-from src.rag_chain import create_vectorstore
-from src.document_processor import process_and_save_data, load_and_process_documents
+from src.chroma_vector_builder import process_and_save_data, load_and_process_documents, create_vectorstore
+
+pdf_path = "./src/data_for_rag.pdf"
+vectorstore_path = "./vectorstore"
+
 
 def main():
-
-    pdf_path = "./src/data_for_rag.pdf"
-    vectorstore_path = "./vectorstore"
 
     # Проверка наличия PDF-файла
     if not os.path.exists(pdf_path):
