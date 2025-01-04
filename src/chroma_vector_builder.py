@@ -11,45 +11,53 @@ collection_name = "im_example_collection"
 embeddings = OpenAIEmbeddings()
 
 
-def process_and_save_data(pdf_path: str = path_for_pdf, vectorstore_path: str = path_for_vectorstore):
+def process_and_save_data(pdf_path, vectorstore_path, name):
     """
     Обработка PDF и сохранение векторной базы.
     Args:
         pdf_path: Путь к PDF-файлу для обработки.
         vectorstore_path: Директория для сохранения векторного хранилища.
+        name: Название для новой/существующей коллекции векторного хранилища.
     """
+    try:
+        documents = load_and_process_documents(pdf_path)
 
-    chunks = load_and_process_documents(pdf_path)
+        # Сохранение данных в векторной базе
+        vectorstore = create_vectorstore(documents=documents,
+                                         name=name,
+                                         path=vectorstore_path)
+        print(f"Векторное хранилище сохранено в {vectorstore_path}")
+        return vectorstore
 
-    # Сохранение данных в векторной базе
-    vectorstore = Chroma.from_documents(documents=chunks,
-                                        embedding=embeddings,
-                                        persist_directory=vectorstore_path)
-
-    print(f"Векторное хранилище сохранено в {vectorstore_path}")
-
-    return vectorstore
+    except Exception as e:
+        print(f"Ошибка при обработке данных: {e}")
 
 def load_and_process_documents(pdf_path: str):
     """Загружает и обрабатывает PDF-файлы"""
 
-    # Загрузка документа
-    loader = PyPDFLoader(pdf_path)
-    docs = loader.load()
+    try:
+        # Загрузка документа
+        loader = PyPDFLoader(pdf_path)
+        docs = loader.load()
 
-    # Разделение документа на фрагменты
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    splits = text_splitter.split_documents(docs)
+        # Разделение документа на фрагменты
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        splits = text_splitter.split_documents(docs)
+        return splits
 
-    return splits
+    except Exception as e:
+        print(f"Ошибка при обработке данных: {e}")
 
-def create_vectorstore(documents, path: str=path_for_vectorstore, name: str=collection_name):
+def create_vectorstore(documents, name: str=collection_name, path: str=path_for_vectorstore):
     """Создание векторного хранилища из обработанных документов"""
-    vectorstore = Chroma.from_documents(documents=documents,
-                                        embedding=embeddings,
-                                        collection_name=name,
-                                        persist_directory=path)
-    return vectorstore
+    try:
+        vectorstore = Chroma.from_documents(documents=documents,
+                                            embedding=embeddings,
+                                            collection_name=name,
+                                            persist_directory=path)
+        return vectorstore
+    except Exception as e:
+        print(f"Ошибка при создании векторного хранилища: {e}")
 
 def load_vectorstore(path: str=path_for_vectorstore, name: str=collection_name):
     """Загрузка существующей векторной базы"""

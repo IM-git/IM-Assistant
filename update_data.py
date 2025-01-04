@@ -4,6 +4,7 @@ from src.chroma_vector_builder import process_and_save_data, load_and_process_do
 
 pdf_path = "./src/data_for_rag.pdf"
 vectorstore_path = "./vectorstore"
+collection_name = "im_example_collection"
 
 
 def main():
@@ -15,23 +16,14 @@ def main():
 
     # Проверка существования директории векторного хранилища
     # Если хранилища нет, то создадим его из имеющегося pdf
-    if not os.path.exists(vectorstore_path):
-        print(f"Векторное хранилище '{vectorstore_path}' не найдено. Создаём...")
-
-        try:
-            processed_docs = load_and_process_documents(pdf_path)
-            create_vectorstore(documents=processed_docs)
-            print(f"Векторное хранилище успешно создано в '{vectorstore_path}'!")
-        except Exception as e:
-            print(f"Ошибка при создании векторного хранилища: {e}")
-            return
-
-    # Обработка и обновление данных
-    try:
-        process_and_save_data(pdf_path, vectorstore_path)
+    if os.path.exists(vectorstore_path):
+        process_and_save_data(pdf_path, vectorstore_path, collection_name)
         print(f"Данные успешно обновлены и сохранены в '{vectorstore_path}'!")
-    except Exception as e:
-        print(f"Ошибка при обработке данных: {e}")
+
+    else:
+        print(f"Векторное хранилище '{vectorstore_path}' не найдено. Создаём...")
+        process_and_save_data(pdf_path, vectorstore_path, collection_name)
+        print(f"Векторное хранилище успешно создано в '{vectorstore_path}'!")
 
 
 if __name__ == "__main__":
