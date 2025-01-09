@@ -10,3 +10,11 @@ class Prompts:
     Context: {context}
     Question: {question}
     """
+
+    # Путь к векторному хранилищу для обработанного PDF
+    PDF_VECTORSTORE_PATH = "./vectorstore/processed_pdf"
+
+    # Путь к векторному хранилищу для истории вопросов-ответов
+    HISTORY_VECTORSTORE_PATH = "./vectorstore/qa_history"
+
+

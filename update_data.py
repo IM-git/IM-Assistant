@@ -2,8 +2,10 @@ import os
 
 from src.chroma_vector_builder import process_and_save_data, load_and_process_documents, create_vectorstore
 
+from resources import Prompts
+
 pdf_path = "./src/data_for_rag.pdf"
-vectorstore_path = "./vectorstore"
+vectorstore_path = Prompts.PDF_VECTORSTORE_PATH
 collection_name = "im_example_collection"
 
 

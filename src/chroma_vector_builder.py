@@ -4,6 +4,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 
+import chromadb
+
 path_for_pdf = './src/data_for_rag.pdf'
 path_for_vectorstore = './vectorstore'
 collection_name = "im_example_collection"
@@ -55,6 +57,16 @@ def create_vectorstore(documents, name: str=collection_name, path: str=path_for_
                                             embedding=embeddings,
                                             collection_name=name,
                                             persist_directory=path)
+        return vectorstore
+    except Exception as e:
+        print(f"Ошибка при создании векторного хранилища: {e}")
+
+def create_empty_vectorstore(name: str=collection_name, path: str=path_for_vectorstore):
+    """Создание векторного хранилища из обработанных документов"""
+    try:
+
+        vectorstore = Chroma(collection_name=name,
+                             persist_directory=path)
         return vectorstore
     except Exception as e:
         print(f"Ошибка при создании векторного хранилища: {e}")
