@@ -1,7 +1,7 @@
 from services.lang_chain import LangChainService
 from services.audio import Audio
 
-from src.chroma_vector_builder import load_and_process_documents, create_vectorstore, get_retriever, load_vectorstore
+from src.chroma_vector_builder import load_and_process_documents, create_vectorstore, get_retriever, load_vectorstore, get_multi_retriever
 from resources import Prompts
 
 PDF_VECTORSTORE_PATH = Prompts.PDF_VECTORSTORE_PATH
@@ -18,10 +18,10 @@ pdf_vectorstore = load_vectorstore(path=Prompts.PDF_VECTORSTORE_PATH)
 pdf_retriever = get_retriever(pdf_vectorstore)
 
 # Векторная база из предыдущих вопросов и ответов
-# history_vectorstore = load_vectorstore(path=Prompts.HISTORY_VECTORSTORE_PATH)
-# history_retriever = get_retriever(history_vectorstore)
-#
-# retriever = pdf_retriever + history_retriever
+history_vectorstore = load_vectorstore(path=Prompts.HISTORY_VECTORSTORE_PATH)
+history_retriever = get_retriever(history_vectorstore)
+
+multi_retriever = get_multi_retriever([pdf_retriever, history_retriever])
 
 lang_chain_service = LangChainService(gpt_model="gpt-4o-mini")
 
@@ -52,13 +52,10 @@ def audio_assistant():
 
 def message_assistant():
 
-    x = True
+    while True:
 
-    while x:
-
-        # question = input("Привет! Вы можете задать вопрос отправив текстовое сообщение ниже:")
+        question = input("Привет! Вы можете задать вопрос отправив текстовое сообщение ниже:")
         # question = "При завершении задачи какие статусы выставляются?"
-        question = "Кто такой паладин?"
 
         if question.lower() in ["выход", "стоп", "закончить"]:
             print("Завершение работы.")
@@ -67,13 +64,11 @@ def message_assistant():
         print(f"Ваш вопрос: {question}")
 
         try:
-            response = lang_chain_service.rag_assistant(question_text=question, retriever=pdf_retriever)
+            response = lang_chain_service.rag_assistant(question_text=question, retriever=multi_retriever)
             print(f"Ответ: {response}")
 
         except Exception as e:
             print(f"Ошибка при обработке запроса: {e}")
-
-        x = False
 
 
 if __name__ == '__main__':

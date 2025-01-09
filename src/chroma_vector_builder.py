@@ -4,6 +4,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 
+from langchain.chains import RetrievalQA
+from langchain.retrievers import MergerRetriever
+
 import chromadb
 
 path_for_pdf = './src/data_for_rag.pdf'
@@ -81,3 +84,7 @@ def get_retriever(vectorstore):
     """Настройка извлечения документов"""
     return vectorstore.as_retriever(search_type="similarity",
                                     search_kwargs={"k": 5})
+
+def get_multi_retriever(retrievers: list):
+    multi_retriever = MergerRetriever(retrievers=retrievers)
+    return multi_retriever
